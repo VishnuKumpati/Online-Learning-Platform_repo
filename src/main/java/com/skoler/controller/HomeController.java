@@ -12,7 +12,7 @@ public class HomeController {
 	
 	 @GetMapping("/home")
 	    public ModelAndView getHome() {
-	        ModelAndView mv = new ModelAndView("home");
+	        ModelAndView mv = new ModelAndView("register");
 	        return mv;
 	    }
 }
