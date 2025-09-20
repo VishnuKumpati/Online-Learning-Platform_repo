@@ -60,7 +60,7 @@ public class RegistrationService {
 
     public void registerStudent(StudentRegistrationRequest request) {
         Student student = new Student();
-        student.g
+        student.setFullName(request.getFullName());
         student.setEmail(request.getEmail());
         student.setPassword(request.getPassword()); // plain text (no BCrypt)
         student.setUniversity(request.getUniversity());
