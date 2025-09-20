@@ -15,10 +15,7 @@ public class RegistrationController {
         this.registrationService = registrationService;
     }
 
-    @GetMapping("/register/student")
-    public String getStudentRegister() {
-        return "student-register";
-    }
+  
 
     @PostMapping("/send-otp")
     @ResponseBody

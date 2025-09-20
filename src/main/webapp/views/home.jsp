@@ -60,7 +60,7 @@
     <div class="container">
         <h1 class="display-4 fw-bold">Welcome to Skoler</h1>
         <p class="lead">Learn from top instructors, anytime and anywhere.</p>
-        <a href="student-register.jsp" class="btn btn-warning btn-lg me-3">Join as Student</a>
+<a href="${pageContext.request.contextPath}/skoler/register/student" class="btn btn-warning btn-lg me-3">Join as Student</a>
         <a href="instructor-register.jsp" class="btn btn-outline-light btn-lg">Teach on Skoler</a>
     </div>
 </section>
