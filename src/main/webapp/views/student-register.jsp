@@ -124,6 +124,7 @@ $(document).ready(function() {
             university: $("#university").val(),
             branch: $("#branch").val(),
             phoneNumber: $("#phoneNumber").val()
+            otp: $("#otp").val() 
         };
 
         $.ajax({
