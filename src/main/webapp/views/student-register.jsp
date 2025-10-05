@@ -89,7 +89,7 @@ $(document).ready(function() {
          });
     });
 
-    // 2️⃣ Verify OTP
+   
     $("#verifyOtpBtn").click(function() {
         const email = $("#email").val();
         const otp = $("#otp").val();
@@ -109,7 +109,7 @@ $(document).ready(function() {
          });
     });
 
-    // 3️⃣ Submit registration
+   
     $("#registrationForm").submit(function(e) {
         e.preventDefault();
         if(!emailVerified) {
@@ -123,7 +123,7 @@ $(document).ready(function() {
             password: $("#password").val(),
             university: $("#university").val(),
             branch: $("#branch").val(),
-            phoneNumber: $("#phoneNumber").val()
+            phoneNumber: $("#phoneNumber").val(),
             otp: $("#otp").val() 
         };
 

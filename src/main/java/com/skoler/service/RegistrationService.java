@@ -18,8 +18,6 @@ public class RegistrationService {
 
     // Active OTPs (key = email, value = OTP + expiry)
     private final ConcurrentHashMap<String, OtpData> otpStore = new ConcurrentHashMap<>();
-
-    // Expired OTPs tracked separately
     private final ConcurrentHashMap<String, OtpData> expiredOtpStore = new ConcurrentHashMap<>();
 
     public RegistrationService(StudentRepository studentRepository, EmailService emailService) {
@@ -30,8 +28,8 @@ public class RegistrationService {
     // ---------------- OTP Logic ---------------- //
 
     public void sendOtp(String email) {
-        String otp = String.valueOf(new Random().nextInt(900000) + 100000); // 6-digit OTP
-        long expiryTime = System.currentTimeMillis() + (5 * 60 * 1000); // 5 min
+        String otp = String.valueOf(new Random().nextInt(900000) + 100000);
+        long expiryTime = System.currentTimeMillis() + (5 * 60 * 1000);
         OtpData otpData = new OtpData(otp, expiryTime);
 
         otpStore.put(email, otpData);
@@ -62,7 +60,7 @@ public class RegistrationService {
         Student student = new Student();
         student.setFullName(request.getFullName());
         student.setEmail(request.getEmail());
-        student.setPassword(request.getPassword()); // plain text (no BCrypt)
+        student.setPassword(request.getPassword()); 
         student.setUniversity(request.getUniversity());
         student.setBranch(request.getBranch());
         student.setPhoneNumber(request.getPhoneNumber());
