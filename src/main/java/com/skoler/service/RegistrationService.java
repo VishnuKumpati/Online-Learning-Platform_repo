@@ -47,12 +47,12 @@ public class RegistrationService {
 
         if (otpData.getOtp().equals(inputOtp) && !otpData.isUsed()) {
             otpData.setUsed(true);
-            otpStore.remove(email);
             return true;
         }
 
         return false;
     }
+
 
     // ---------------- Student Registration ---------------- //
 

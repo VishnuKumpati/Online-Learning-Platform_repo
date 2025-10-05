@@ -38,9 +38,10 @@ public class RegistrationController {
                                                   @RequestParam String otp) {
         boolean valid = registrationService.verifyOtp(request.getEmail(), otp);
         if (!valid) {
-        	return ResponseEntity.badRequest().body("OTP invalid or expired!");
+            return ResponseEntity.badRequest().body("OTP invalid or expired!");
         }
         registrationService.registerStudent(request);
         return ResponseEntity.ok("Registration successful!");
     }
+
 }

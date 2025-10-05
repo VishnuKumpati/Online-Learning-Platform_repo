@@ -96,17 +96,19 @@ $(document).ready(function() {
         if(!otp) { alert("Enter OTP!"); return; }
 
         $.post("${pageContext.request.contextPath}/skoler/verify-otp", { email: email, otp: otp })
-         .done(function(res) {
-             $("#otp-message").text(res).show();
-             emailVerified = true;
-             $("#registerBtn").prop("disabled", false); // enable register
-             $("#otpDiv").hide(); // hide OTP input
-         })
-         .fail(function(err) {
-             $("#otp-message").text(err.responseText).show();
-             emailVerified = false;
-             $("#registerBtn").prop("disabled", true);
-         });
+        .done(function(res) {
+            $("#otp-message").removeClass("alert-danger").addClass("alert-success").text(res).show();
+            emailVerified = true;
+            $("#registerBtn").prop("disabled", false);
+            $("#otpDiv").hide(); // ✅ Hide only when success
+        })
+        .fail(function(err) {
+            $("#otp-message").removeClass("alert-success").addClass("alert-danger").text(err.responseText).show();
+            emailVerified = false;
+            $("#registerBtn").prop("disabled", true);
+            $("#otpDiv").show(); // ✅ Keep or re-show the OTP field so user can retry
+        });
+
     });
 
    
@@ -128,10 +130,17 @@ $(document).ready(function() {
         };
 
         $.ajax({
-            url: "${pageContext.request.contextPath}/skoler/complete-registration",
+            url: "${pageContext.request.contextPath}/skoler/complete-registration?otp=" + encodeURIComponent($("#otp").val()),
             type: "POST",
             contentType: "application/json",
-            data: JSON.stringify(data),
+            data: JSON.stringify({
+                fullName: $("#fullName").val(),
+                email: $("#email").val(),
+                password: $("#password").val(),
+                university: $("#university").val(),
+                branch: $("#branch").val(),
+                phoneNumber: $("#phoneNumber").val()
+            }),
             success: function(res) {
                 alert(res);
                 window.location.href = "${pageContext.request.contextPath}/skoler/home";
@@ -140,6 +149,7 @@ $(document).ready(function() {
                 $("#otp-message").text(err.responseText).show();
             }
         });
+
     });
 });
 </script>
