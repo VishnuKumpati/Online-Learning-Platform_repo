@@ -16,16 +16,15 @@ public class RegistrationService {
     private final StudentRepository studentRepository;
     private final EmailService emailService;
 
-    // Active OTPs (key = email, value = OTP + expiry)
     private final ConcurrentHashMap<String, OtpData> otpStore = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, OtpData> expiredOtpStore = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> verifiedEmails = new ConcurrentHashMap<>();
 
     public RegistrationService(StudentRepository studentRepository, EmailService emailService) {
         this.studentRepository = studentRepository;
         this.emailService = emailService;
     }
 
-    // ---------------- OTP Logic ---------------- //
 
     public void sendOtp(String email) {
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
@@ -33,6 +32,7 @@ public class RegistrationService {
         OtpData otpData = new OtpData(otp, expiryTime);
 
         otpStore.put(email, otpData);
+        verifiedEmails.remove(email); 
         emailService.sendOtpMail(email, otp);
     }
 
@@ -47,12 +47,16 @@ public class RegistrationService {
 
         if (otpData.getOtp().equals(inputOtp) && !otpData.isUsed()) {
             otpData.setUsed(true);
+            verifiedEmails.put(email, true);
             return true;
         }
 
         return false;
     }
 
+    public boolean isEmailVerified(String email) {
+        return verifiedEmails.getOrDefault(email, false);
+    }
 
     // ---------------- Student Registration ---------------- //
 
@@ -60,17 +64,17 @@ public class RegistrationService {
         Student student = new Student();
         student.setFullName(request.getFullName());
         student.setEmail(request.getEmail());
-        student.setPassword(request.getPassword()); 
+        student.setPassword(request.getPassword());
         student.setUniversity(request.getUniversity());
         student.setBranch(request.getBranch());
         student.setPhoneNumber(request.getPhoneNumber());
         student.setRole(UserRole.STUDENT);
 
         studentRepository.save(student);
+        verifiedEmails.remove(request.getEmail()); // reset after success
     }
 
     // ---------------- Inner class for OTP ---------------- //
-
     private static class OtpData {
         private final String otp;
         private final long expiryTime;
