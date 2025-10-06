@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <title>Student Registration | Skoler</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
 <div class="container mt-5">
     <h2 class="mb-4">Student Registration</h2>
-    
-    <div class="alert alert-info" id="otp-message" style="display:none;"></div>
+
+    <!-- Alert message -->
+    <div id="otp-message" style="display:none;"></div>
 
     <form id="registrationForm">
         <!-- Full Name -->
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <!-- OTP Input (hidden initially) -->
+        <!-- OTP Input -->
         <div class="mb-3" id="otpDiv" style="display:none;">
             <label for="otp" class="form-label">Enter OTP</label>
             <div class="input-group">
@@ -68,88 +68,120 @@
 </div>
 
 <script>
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", () => {
     let emailVerified = false;
+    const contextPath = "<%= request.getContextPath() %>";
+    const otpMsg = document.getElementById("otp-message");
+    const otpDiv = document.getElementById("otpDiv");
+    const registerBtn = document.getElementById("registerBtn");
+
+    // Show message helper
+    function showMessage(msg, type = "info") {
+        otpMsg.textContent = msg;
+        otpMsg.className = `alert alert-${type}`;
+        otpMsg.style.display = "block";
+    }
 
     // 1️⃣ Send OTP
-    $("#sendOtpBtn").click(function() {
-        const email = $("#email").val();
-        if(!email) {
-            alert("Enter email first!");
-            return;
+    document.getElementById("sendOtpBtn").addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        if (!email) return showMessage("Enter your email first!", "danger");
+
+        try {
+            const res = await fetch(`${contextPath}/skoler/send-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ email })
+            });
+            const text = await res.text();
+
+            if (res.status === 409) { // duplicate email
+                showMessage("Email already exists. Try another.", "danger");
+                emailVerified = false;
+                registerBtn.disabled = true;
+                otpDiv.style.display = "none";
+            } else if (res.ok) {
+                showMessage("OTP sent successfully!", "success");
+                otpDiv.style.display = "block";
+            } else {
+                showMessage(text, "danger");
+            }
+        } catch (err) {
+            showMessage("Error sending OTP. Try again.", "danger");
         }
-
-        $.post("${pageContext.request.contextPath}/skoler/send-otp", { email: email })
-         .done(function(res) {
-             $("#otp-message").text(res).show();
-             $("#otpDiv").show();
-         })
-         .fail(function(err) {
-             $("#otp-message").text(err.responseText).show();
-         });
     });
 
-   
-    $("#verifyOtpBtn").click(function() {
-        const email = $("#email").val();
-        const otp = $("#otp").val();
-        if(!otp) { alert("Enter OTP!"); return; }
+    // 2️⃣ Verify OTP
+    document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const otp = document.getElementById("otp").value.trim();
+        if (!otp) return showMessage("Please enter OTP!", "warning");
 
-        $.post("${pageContext.request.contextPath}/skoler/verify-otp", { email: email, otp: otp })
-        .done(function(res) {
-            $("#otp-message").removeClass("alert-danger").addClass("alert-success").text(res).show();
-            emailVerified = true;
-            $("#registerBtn").prop("disabled", false);
-            $("#otpDiv").hide(); // ✅ Hide only when success
-        })
-        .fail(function(err) {
-            $("#otp-message").removeClass("alert-success").addClass("alert-danger").text(err.responseText).show();
-            emailVerified = false;
-            $("#registerBtn").prop("disabled", true);
-            $("#otpDiv").show(); // ✅ Keep or re-show the OTP field so user can retry
-        });
+        try {
+            const res = await fetch(`${contextPath}/skoler/verify-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ email, otp })
+            });
+            const text = await res.text();
 
+            if (res.ok) {
+                showMessage("OTP verified successfully!", "success");
+                emailVerified = true;
+                registerBtn.disabled = false;
+                otpDiv.style.display = "none";
+            } else if (res.status === 410) {
+                showMessage("OTP expired. Request new OTP.", "danger");
+                emailVerified = false;
+                registerBtn.disabled = true;
+            } else {
+                showMessage("Incorrect OTP. Try again.", "danger");
+                emailVerified = false;
+                registerBtn.disabled = true;
+            }
+        } catch (err) {
+            showMessage("Error verifying OTP. Try again.", "danger");
+        }
     });
 
-   
-    $("#registrationForm").submit(function(e) {
+    // 3️⃣ Register Student
+    document.getElementById("registrationForm").addEventListener("submit", async e => {
         e.preventDefault();
-        if(!emailVerified) {
-            alert("Please verify your email first!");
+        if (!emailVerified) {
+            showMessage("Please verify your email before registering!", "warning");
             return;
         }
 
         const data = {
-            fullName: $("#fullName").val(),
-            email: $("#email").val(),
-            password: $("#password").val(),
-            university: $("#university").val(),
-            branch: $("#branch").val(),
-            phoneNumber: $("#phoneNumber").val(),
-            otp: $("#otp").val() 
+            fullName: document.getElementById("fullName").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value.trim(),
+            university: document.getElementById("university").value.trim(),
+            branch: document.getElementById("branch").value.trim(),
+            phoneNumber: document.getElementById("phoneNumber").value.trim()
         };
+        const otp = encodeURIComponent(document.getElementById("otp").value.trim());
 
-        $.ajax({
-            url: "${pageContext.request.contextPath}/skoler/complete-registration?otp=" + encodeURIComponent($("#otp").val()),
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                fullName: $("#fullName").val(),
-                email: $("#email").val(),
-                password: $("#password").val(),
-                university: $("#university").val(),
-                branch: $("#branch").val(),
-                phoneNumber: $("#phoneNumber").val()
-            }),
-            success: function(res) {
-                alert(res);
-                window.location.href = "${pageContext.request.contextPath}/skoler/home";
-            },
-            error: function(err) {
-                $("#otp-message").text(err.responseText).show();
+        try {
+            const res = await fetch(`${contextPath}/skoler/complete-registration?otp=${otp}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const text = await res.text();
+
+            if (res.ok) {
+                showMessage("Registration successful!", "success");
+                otpDiv.style.display = "none";
+                registerBtn.disabled = true;
+            } else if (res.status === 409) {
+                showMessage("Email already registered!", "danger");
+            } else {
+                showMessage("Registration failed. Try again.", "danger");
             }
-        });
-
+        } catch (err) {
+            showMessage("Registration failed. Try again.", "danger");
+        }
     });
 });
 </script>
